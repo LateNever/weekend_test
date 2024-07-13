@@ -1,5 +1,5 @@
-import { NextPage } from 'next'
-import Slider from './Slider.jsx'
+import { NextPage } from 'next';
+import Slider from './Slider';
 
 const HomePage: NextPage = () => (
   <>
@@ -8,6 +8,6 @@ const HomePage: NextPage = () => (
     </h1> */}
     <Slider />
   </>
-)
+);
 
-export default HomePage
+export default HomePage;
