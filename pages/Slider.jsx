@@ -1,154 +1,259 @@
 import { useState, useEffect } from 'react';
-// import Image from 'next/image';
-// import styles from './Slider.module.css'
-
-// import React from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import Image from 'next/image';
 
 const Slider = () => {
-  const [currentSlide, setCurrentSlide] = useState({});
   const [sliderContent, setSliderContent] = useState([]);
+  const [currentIndex, setCurrentIndex] = useState(undefined);
+  const [direction, setDirection] = useState(0);
 
-  const slide = (page) => {
-    setCurrentSlide(sliderContent[page]);
+  const slide = (index, dir) => {
+    // direction = 1;
+    setDirection(dir);
+    setTimeout(() => {
+      setCurrentIndex(index);
+    }, 100);
   };
 
-  // const slideRight = () => {
-  //   if (!!sliderContent[currentSlide.id - 1]) {
-  //     setCurrentSlide(currentSlide.id - 1)
-  //   } else {
-  //     setCurrentSlide(sliderContent[sliderContent.length - 1].id)
-  //   }
-  // }
+  // prettier-ignore
+  const prevIndex = () => (currentIndex > 0 ? currentIndex - 1 : sliderContent.length - 1);
+  // prettier-ignore
+  const nextIndex = () => (currentIndex < sliderContent.length - 1 ? currentIndex + 1 : 0);
 
-  const prevSlidePhoto = () => {
-    if (sliderContent[currentSlide.id - 1]) {
-      return sliderContent[currentSlide.id - 1].photo;
-    }
-    return sliderContent[sliderContent.length - 1].photo;
-  };
-
-  const nextSlidePhoto = () => {
-    if (sliderContent[currentSlide.id + 1]) {
-      return sliderContent[currentSlide.id + 1].photo;
-    }
-    return sliderContent[0].photo;
+  const contentAnimation = {
+    hidden: ({ x, y }) => ({
+      x,
+      y,
+      opacity: 0,
+    }),
+    visible: ({ delay }) => ({
+      x: 0,
+      y: 0,
+      opacity: 1,
+      transition: { duration: 0.5, delay: delay * 0.2 },
+    }),
   };
 
   useEffect(() => {
     fetch('http://localhost:3000/sliderContent')
       .then((response) => response.json())
       .then((value) => {
-        setCurrentSlide(value[1]);
-        setSliderContent(value);
+        setSliderContent([...value]);
+        setCurrentIndex(0);
       });
   }, []);
 
-  if (sliderContent.length === 0 || !currentSlide.title) {
-    return <div>Loading...</div>;
+  if (sliderContent.length === 0 || currentIndex === undefined) {
+    return <span>Данные с сервера не получены</span>;
   }
 
   return (
-    <div className="flex flex-col items-center bg-white overflow-x-hidden">
-      <header className="flex justify-between container mt-28 mx-16 mb-9">
-        <h1 className="text-3xl font-ev font-bold">
+    <div className="flex flex-col items-center bg-milk sm:bg-white overflow-hidden">
+      <motion.header
+        className="flex sm:justify-between items-center w-full mt-6 sm:px-16 mb-6 sm:mb-9
+        2xl:mt-28 lg:mt-12"
+        // Анимация framer motion
+        custom={{ x: 0, y: -40, delay: 2 }}
+        initial="hidden"
+        whileInView="visible"
+        variants={contentAnimation}
+      >
+        <h1 className="text-xl sm:text-3xl text-center sm:text-left font-ev font-bold ">
           Есть всё, что бы наполнить жизнь счастьем
         </h1>
-        <nav className="flex w-[112px] justify-between">
+        <nav className="w-[112px] justify-between hidden sm:flex">
           <button
             type="button"
-            className="w-[50px] h-[50px] flex justify-center items-center border border-grey rounded-full hover:bg-blue"
+            className="w-[50px] h-[50px] flex justify-center items-center border border-grey rounded-full transition hover:bg-blue"
             onClick={() => {
-              if (sliderContent[currentSlide.id - 1]) {
-                slide(currentSlide.id - 1);
-              } else {
-                slide(sliderContent[sliderContent.length - 1].id);
-              }
+              slide(prevIndex(), -1);
             }}
           >
-            <img
+            <Image
               src="/UI/arrow.svg"
               alt="arrow_left"
-              // width={5}
-              // height={14}
-              className="h-[14px]"
+              width={10}
+              height={10}
             />
           </button>
 
           <button
             type="button"
-            className="w-[50px] h-[50px] flex justify-center items-center border border-grey rounded-full hover:bg-blue"
+            className="w-[50px] h-[50px] ml-[12px] flex justify-center items-center border border-grey rounded-full transition hover:bg-blue"
             onClick={() => {
-              if (sliderContent[currentSlide.id + 1]) {
-                slide(currentSlide.id + 1);
-              } else {
-                slide(sliderContent[0].id);
-              }
+              slide(nextIndex(), 1);
             }}
           >
-            <img
+            <Image
               src="/UI/arrow.svg"
               alt="arrow_right"
-              // width={5}
-              // height={14}
+              width={10}
+              height={10}
               className="scale-x-[-1]"
             />
           </button>
         </nav>
-      </header>
+      </motion.header>
 
-      <main className="flex items-baseline w-[127vw]">
-        <div className="w-3/12 h-[470px] bottom-[50px] rounded-xl container relative overflow-hidden bg-milk -skew-y-2">
-          <img
-            src={prevSlidePhoto()}
-            alt="new residential"
-            className="absolute object-cover inset-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full h-full opacity-30"
-          />
-        </div>
-
-        <article className="w-5/12 rounded-xl bg-milk">
-          <div className="container h-[500px] rounded-xl container relative overflow-hidden bg-milk mb-9">
-            <img
-              src={currentSlide.photo}
-              alt="new residential"
-              className="absolute object-cover inset-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full h-full "
+      <motion.main
+        className="flex items-baseline sm:w-[127vw]"
+        custom={{ x: 0, y: -40, delay: 3 }}
+        initial="hidden"
+        whileInView="visible"
+        variants={contentAnimation}
+      >
+        {/* Левая картинка */}
+        <AnimatePresence mode="wait">
+          <motion.div
+            className=" bottom-[50px] rounded-xl container relative overflow-hidden bg-milk cursor-pointer
+          w-3/12 2xl:h-[470px] xl:h-[400px] sm:h-[270px] hidden sm:block"
+            onClick={() => {
+              slide(prevIndex(), -1);
+            }}
+            // Анимация Animate Presence
+            initial={{
+              opacity: 0,
+              x: direction === 1 ? 30 : -30,
+              skewY: -2,
+            }}
+            key={prevIndex()}
+            animate={{ opacity: 1, x: 0, skewY: -2 }}
+            exit={{
+              opacity: 0,
+              x: direction === 1 ? -100 : 100,
+            }}
+            transition={{ duration: direction === 1 ? 0.2 : 0.6 }}
+          >
+            <Image
+              src={sliderContent[prevIndex()].photo}
+              alt="modern apartment complex"
+              layout="fill"
+              objectFit="cover"
+              className="opacity-30 hover:opacity-60 transition"
             />
-          </div>
-          <h2 className="text-lg font-ev font-bold ml-6 mr-24 mb-3">
-            {currentSlide.title}
-          </h2>
-          <p className="text-2xxs font-ev font-medium ml-6 mr-24 mb-10">
-            {currentSlide.description}
-          </p>
-        </article>
+          </motion.div>
+        </AnimatePresence>
 
-        <div className="w-3/12 h-[470px] bottom-[50px] rounded-xl container relative overflow-hidden bg-milk skew-y-2">
-          <img
-            src={nextSlidePhoto()}
-            alt="new residential"
-            className="absolute object-cover inset-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full h-full opacity-30 "
-          />
-        </div>
-      </main>
+        {/* Центральный слайд */}
+
+        <motion.article className="sm:w-5/12 w-full sm:rounded-xl bg-milk">
+          <AnimatePresence mode="wait">
+            <motion.div
+              // Анимация Animate Presence
+              initial={{
+                opacity: 0,
+                x: direction === 1 ? 30 : -30,
+              }}
+              key={currentIndex}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{
+                opacity: 0,
+                x: direction === 1 ? -100 : 100,
+              }}
+              transition={{ delay: 0, duration: 0.4 }}
+              className="w-full h-[220px] sm:rounded-xl sm:container relative overflow-hidden bg-milk mb-9
+          2xl:h-[500px] xl:h-[430px] sm:h-[300px]"
+            >
+              <button
+                type="button"
+                className="w-[75px] h-full absolute flex sm:hidden justify-center items-center hover:bg-grey hover:opacity-90 z-10"
+                onClick={() => {
+                  slide(prevIndex(), -1);
+                }}
+              >
+                <Image
+                  src="/UI/arrow.svg"
+                  alt="arrow_left"
+                  width={15}
+                  height={10}
+                />
+              </button>
+
+              <Image
+                src={sliderContent[currentIndex].photo}
+                alt="modern apartment complex"
+                layout="fill"
+                objectFit="cover"
+              />
+
+              <button
+                type="button"
+                className="w-[75px] h-full absolute flex sm:hidden justify-center items-center hover:bg-grey hover:opacity-90 z-10 right-0"
+                onClick={() => {
+                  slide(nextIndex(), 1);
+                }}
+              >
+                <Image
+                  src="/UI/arrow.svg"
+                  alt="arrow_left"
+                  width={15}
+                  height={10}
+                  className="scale-x-[-1]"
+                />
+              </button>
+            </motion.div>
+          </AnimatePresence>
+
+          <AnimatePresence mode="wait">
+            <motion.div
+              // Анимация Animate Presence
+              initial={{
+                opacity: 0,
+                y: -20,
+              }}
+              key={sliderContent[currentIndex].title}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{
+                opacity: 0,
+                y: 20,
+              }}
+              transition={{ duration: 0.4 }}
+            >
+              <h2 className="text-lg font-ev font-bold mx-6 sm:ml-6 sm:mr-24 mb-3">
+                {sliderContent[currentIndex].title}
+              </h2>
+
+              <p className="text-2xxs leading-normal font-ev font-medium mx-6 sm:ml-6 sm:mr-24 mb-10">
+                {sliderContent[currentIndex].description}
+              </p>
+            </motion.div>
+          </AnimatePresence>
+        </motion.article>
+
+        {/* Правая картинка */}
+        <AnimatePresence mode="wait">
+          <motion.div
+            className=" bottom-[50px] rounded-xl container relative overflow-hidden bg-milk cursor-pointer
+          w-3/12 2xl:h-[470px] xl:h-[400px] sm:h-[270px] hidden sm:block"
+            onClick={() => {
+              slide(nextIndex(), 1);
+            }}
+            // Анимация Animate Presence
+            initial={{
+              opacity: 0,
+              x: direction === 1 ? 30 : -30,
+              skewY: 2,
+            }}
+            key={prevIndex()}
+            animate={{ opacity: 1, x: 0, skewY: 2 }}
+            exit={{
+              opacity: 0,
+              x: direction === 1 ? -100 : 100,
+            }}
+            transition={{ duration: direction === 1 ? 0.6 : 0.2 }}
+          >
+            <Image
+              src={sliderContent[nextIndex()].photo}
+              alt="modern apartment complex"
+              layout="fill"
+              objectFit="cover"
+              className="opacity-30 hover:opacity-60 transition"
+            />
+          </motion.div>
+        </AnimatePresence>
+      </motion.main>
     </div>
   );
 };
-
-// return (
-//   // <div className={styles.container}>
-//   <div className="container mx-auto p-4">
-//     <header className={styles.sliderHeader}>
-//       <h1 className={styles.headerTitle}>
-//         "Есть всё, что бы наполнить жизнь счастьем"
-//       </h1>
-//       <nav className={styles.navButtons}></nav>
-//     </header>
-//     <article className={styles.content}>
-//       <img src={currentSlide.photo} alt="photo" className={styles.photo} />
-//       {/* <img src={currentSlide.photo} alt="photo" className={styles.photo} /> */}
-//       <h2 className={styles.title}>{currentSlide.title}</h2>
-//       <p className={styles.description}>{currentSlide.description}</p>
-//     </article>
-//   </div>
-// )
 
 export default Slider;
